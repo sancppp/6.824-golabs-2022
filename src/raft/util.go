@@ -29,3 +29,10 @@ func Lab2bPrintf(format string, a ...interface{}) (n int) {
 	}
 	return
 }
+
+func min(a int, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}

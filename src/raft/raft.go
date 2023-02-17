@@ -89,7 +89,7 @@ type Raft struct {
 	appendCh  chan bool //心跳事件
 	voteCh    chan bool //投票事件
 	voteCount int       //计票
-	log       []LogEntry
+	log       []*LogEntry
 
 	//所有机器的可变状态
 	commitIndex int //将被提交的日志记录的索引(初值为 0 且单调递增) 不需要持久化。
@@ -179,7 +179,7 @@ func (rf *Raft) CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int,
 // that index. Raft should now trim its log as much as possible.
 func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	// Your code here (2D).
-
+	//TODO Lab2D
 }
 
 // RequestVoteArgs example RequestVote RPC arguments structure.
@@ -245,12 +245,12 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 
 // AppendEntriesArgs AppendEntries RPC
 type AppendEntriesArgs struct {
-	Term              int        //当前leader任期
-	LeaderId          int        //用来 follower 重定向到 leader
-	PrevLogIndex      int        //前继日志的Index
-	PrevLogTerm       int        //前继日志的任期
-	Entries           []LogEntry //存储日志
-	LeaderCommitIndex int        //leader的commitIndex
+	Term              int         //当前leader任期
+	LeaderId          int         //用来 follower 重定向到 leader
+	PrevLogIndex      int         //前继日志的Index
+	PrevLogTerm       int         //前继日志的任期
+	Entries           []*LogEntry //存储日志
+	LeaderCommitIndex int         //leader的commitIndex
 }
 type AppendEntriesReply struct {
 	Term    int  //当前任期，用于更新leader自己
@@ -328,13 +328,6 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	}
 }
 
-func min(a int, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // example code to send a RequestVote RPC to a server.
 // server is the index of the target server in rf.peers[].
 // expects RPC arguments in args.
@@ -400,7 +393,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	Lab2bPrintf("raft %v(leader,term:%v) receive command-%v\n", rf.me, rf.currentTerm, command)
 	//此时自己是leader，需要将入参存进自己的logs
 	index = len(rf.log) + 1
-	rf.log = append(rf.log, LogEntry{
+	rf.log = append(rf.log, &LogEntry{
 		Term:    rf.currentTerm,
 		Command: command,
 	})
@@ -649,6 +642,7 @@ func (rf *Raft) sendAppend() {
 					return
 				} else {
 					//失败了，需要减少nextIndex[peer]并重试
+					//TODO nextIndex的回退逻辑
 					rf.nextIndex[peer] /= 2
 					rf.mu.Unlock()
 					goto retry
